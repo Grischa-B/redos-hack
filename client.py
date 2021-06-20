@@ -88,26 +88,26 @@ def snd_cmd(connection, cmd):
 
 def hash_md5(data):
 	return hashlib.md5(data.encode('utf-8')).hexdigest()
-	
+
 def inttoarr(a,l):
 	arr = bytearray()
 	for i in range(l):
 		arr.append(a & 255)
 		a = a >> 8
 	return arr
-	
+
 def arrtoint(a):
 	res = 0
 	for elem in a[::-1]:
 		res = (res << 8) | elem
 	return res
-	
+
 def write_data(connection, data):
 	connection.send(inttoarr(len(data),1))
 	for elem in data:
 		connection.send(inttoarr(len(elem),4))
 		connection.send(elem)
-		
+
 def read_data(connection):
 	arr_len = connection.recv(1)[0]
 	ret = []
@@ -125,30 +125,32 @@ def networkloop(tk1):
 	write_data(sock,[
 	bytearray('set-key'.encode()),
 	bytearray(mykey.encode())])
-	print('your key: ',mykey)
-	print('S or C?')
+	print('Your key: ',mykey)
+	print('Are you Server or Client? (S / C): ', end='')
 	if(input()=='S'):
+		print('Sharing your screen started')
 		while True:
 			scr_data = getscreen()
 			write_data(sock,[
 			bytearray('screen'.encode()),
 			getscreen()
 			])
-			print(datetime.now(),' ',len(scr_data))
+			# print(datetime.now(),' ',len(scr_data))
 			sleep(1.0/FPS)
 	else:
-		print('enter-key:')
+		print('Enter key: ', end='')
 		key = input()
 		write_data(sock,[
-		bytearray('get-scr'.encode()),
-		bytearray(key.encode())])
+    		bytearray('get-scr'.encode()),
+    		bytearray(key.encode())])
+		print('Connecting to screen sharing...')
 		while True:
 			#write_data(sock,[
 			#bytearray('get-scr'.encode()),
 			#bytearray(key.encode())
 			#])
 			data = read_data(sock)[0]
-			print(datetime.now(),' ',len(data))
+			# print(datetime.now(),' ',len(data))
 			image = Image.open(BytesIO(data))
 			image = image.resize((screen_width,screen_height))
 			photo = ImageTk.PhotoImage(image)
@@ -159,4 +161,3 @@ def networkloop(tk1):
 # ENTRY
 threading.Thread(target=networkloop, args=(tk,)).start()
 tk.mainloop()
-
